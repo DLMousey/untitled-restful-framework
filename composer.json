@@ -1,6 +1,8 @@
 {
     "name": "untitled-rest-framework/kernel",
+    "description": "As-of-yet-untitled framework for building RESTful APIs",
     "type": "library",
+    "license": "proprietary",
     "autoload": {
         "psr-4": {
             "UntitledRestFramework\\Kernel\\": "src/"
