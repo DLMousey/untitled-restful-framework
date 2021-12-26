@@ -3,12 +3,9 @@
 namespace UntitledRestFramework;
 
 use Psr\Http\Message\MessageInterface;
-use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
-use Psr\Http\Message\UriInterface;
-use UntitledRestFramework\Exceptions\InvalidRequestMethodException;
+use UntitledRestFramework\Collection\HeaderCollection;
 use UntitledRestFramework\Exceptions\NotImplementedException;
-use UntitledRestFramework\Validators\RequestMethod;
 
 class Request implements MessageInterface
 {
@@ -18,19 +15,20 @@ class Request implements MessageInterface
     private Protocol $protocol;
 
     /**
-     * @var array The headers attached to the request
+     * @var HeaderCollection Collection containing the headers attached to the request
      */
-    private array $headers;
+    private HeaderCollection $headers;
 
     public function __construct()
     {
-        try {
-            $this->protocol = new Protocol($_SERVER['SERVER_PROTOCOL']);
-        } catch (\Exception $e) {
-            die(dump($e));
-        }
+        // @TODO - Ensure any exceptions are caught when initialising protocol object
+        $this->protocol = new Protocol($_SERVER['SERVER_PROTOCOL']);
+        $this->headers = new HeaderCollection();
 
-        die(dump($this->protocol));
+        foreach(getallheaders() as $key => $value)
+        {
+            $this->headers->add($key, $value);
+        }
     }
 
     /**
@@ -53,9 +51,9 @@ class Request implements MessageInterface
         return $request;
     }
 
-    public function getHeaders() : array
+    public function getHeaders(bool $normalised = false) : array
     {
-        return $this->headers;
+        return (!$normalised) ? $this->headers->getHeaders() : $this->headers->getNormalisedHeaders();
     }
 
     /**
@@ -123,7 +121,7 @@ class Request implements MessageInterface
     public function getBody() : array
     {
         if ($this->headers['Content-Type'] == 'application/json') {
-            return json_decode(file_get_contents('php://input', true));
+            return json_decode(file_get_contents('php://input'), true);
         }
 
         return $_POST;
